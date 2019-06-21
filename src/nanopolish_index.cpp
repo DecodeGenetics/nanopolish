@@ -44,7 +44,7 @@ static const char *INDEX_USAGE_MESSAGE =
 
 namespace opt
 {
-    static unsigned int verbose = 0;
+    static unsigned int verbose = 0; 
     static std::vector<std::string> raw_file_directories;
     static std::string fast5_fofn;
     static std::string reads_file;

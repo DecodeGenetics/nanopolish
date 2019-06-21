@@ -15,6 +15,9 @@ class Haplotype
 {
     public:
 
+        // functions
+        Haplotype(); // now allowed (legacy TODO: remove??)
+
         // constructor
         Haplotype(const std::string& ref_name,
                   const size_t ref_position,
@@ -63,15 +66,29 @@ class Haplotype
         // return a new haplotype subsetted by reference coordinates
         Haplotype substr_by_reference(size_t start, size_t end) const;
 
+        //added by dorukb
+        bool truncate_seq_from_right_end(int bp);
+
+        //added by dorukb
+        bool truncate_seq_from_left_end(int bp);
+
+        //added by dorukb
+        bool truncate_seq(int bp, bool isLeftEnd);
+
+
+
     private:
         
-        // functions
-        Haplotype(); // not allowed
+        // // functions
+        // Haplotype(); // not allowed
         
         // Find the first derived index that has a corresponding
         // reference position which is not less than ref_index.
         // This mimics std::lower_bound
         size_t _find_derived_index_by_ref_lower_bound(size_t ref_index) const;
+
+        std::string replace_M_with_N_in_reference(const std::string& ref_sequence);
+
 
         void print_debug_info() const;
 

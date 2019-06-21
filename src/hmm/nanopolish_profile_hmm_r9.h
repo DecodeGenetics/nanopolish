@@ -17,7 +17,7 @@
 #include "nanopolish_emissions.h"
 #include "nanopolish_hmm_input_sequence.h"
 #include "nanopolish_profile_hmm.h"
-
+  
 //#define HMM_REVERSE_FIX 1
 //#define DEBUG_FILL 1
 

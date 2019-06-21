@@ -19,6 +19,10 @@
 #include "nanopolish_scorereads.h"
 #include "nanopolish_phase_reads.h"
 #include "nanopolish_train_poremodel_from_basecalls.h"
+#include "nanopolish_test_vcf_variants.h"
+
+
+ 
 
 int print_usage(int argc, char **argv);
 int print_version(int argc, char **argv);
@@ -35,7 +39,8 @@ static std::map< std::string, std::function<int(int, char**)> > programs = {
     {"methyltrain", methyltrain_main},
     {"scorereads",  scorereads_main} ,
     {"phase-reads",  phase_reads_main} ,
-    {"call-methylation",  call_methylation_main}
+    {"call-methylation",  call_methylation_main},
+    {"test-vcf-variants", test_vcf_variants_main},
 };
 
 int print_usage(int, char **)

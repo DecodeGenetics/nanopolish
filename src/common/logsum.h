@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <cmath>
+#include <stdexcept>
+#include <stdlib.h>
 
 /* p7_LOGSUM_SCALE defines the precision of the calculation; the
  * default of 1000.0 means rounding differences to the nearest 0.001
@@ -55,6 +57,13 @@ int p7_FLogsumInit(void);
 inline float
 p7_FLogsum(float a, float b)
 {
+  //modified by dorukb. a or b may take NaN values, and must be caught.
+  // For now I am throwing an exception to catch and do nothing when it occurs. 
+  if (isnan(a) || isnan(b))
+  {
+  	throw std::runtime_error("In function 'p7_FLogsum': a or be is NaN");
+  }
+
   extern float flogsum_lookup[p7_LOGSUM_TBL]; /* p7_LOGSUM_TBL=16000: (A-B) = 0..16 nats, steps of 0.001 */
 
   const float max = ESL_MAX(a, b);

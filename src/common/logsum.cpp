@@ -9,7 +9,7 @@
  *    6. Copyright and license information.
  *
  * Exegesis:
- * 
+ *  
  * Internally, HMMER3 profile scores are in nats: floating point
  * log-odds probabilities, with the log odds taken relative to
  * background residue frequencies, and the log to the base e.
@@ -311,7 +311,7 @@ main(int argc, char **argv)
 }
 #endif /*p7LOGSUM_TESTDRIVE*/
 /*------------------ end, test driver ---------------------------*/
-
+  
 
 /*****************************************************************
  * 5. Example.
@@ -323,7 +323,7 @@ main(int argc, char **argv)
 #include "p7_config.h"
 #include "easel.h"
 #include "hmmer.h"
-
+ 
 int
 main(int argc, char **argv)
 {

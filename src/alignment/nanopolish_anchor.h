@@ -31,6 +31,20 @@ struct AlignedPairRefUBComp
     bool operator()(int v, const AlignedPair& o) { return v < o.ref_pos; }
 };
 
+
+//added by dorukb 
+struct AlignedPairReadLBComp
+{
+    bool operator()(const AlignedPair& o, int v) { return o.read_pos < v; }
+};
+
+//added by dorukb 
+struct AlignedPairReadUBComp
+{
+    bool operator()(int v, const AlignedPair& o) { return v < o.read_pos; }
+};
+
+
 // typedefs
 typedef std::vector<AlignedPair>::iterator AlignedPairIter;
 typedef std::vector<AlignedPair>::const_iterator AlignedPairConstIter;

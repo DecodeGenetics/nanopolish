@@ -17,16 +17,16 @@ void profile_hmm_forward_initialize_r9(FloatMatrix& fm)
     for(uint32_t si = 0; si < fm.n_cols; si++) {
         set(fm, 0, si, -INFINITY);
     }
-
+   
     for(uint32_t ri = 0; ri < fm.n_rows; ri++) {
         set(fm, ri, PSR9_KMER_SKIP, -INFINITY);
         set(fm, ri, PSR9_BAD_EVENT, -INFINITY);
         set(fm, ri, PSR9_MATCH, -INFINITY);
     }
 }
-
+    
 float profile_hmm_score_r9(const HMMInputSequence& sequence, const HMMInputData& data, const uint32_t flags)
-{
+{  
     const uint32_t k = data.pore_model->k;
     uint32_t n_kmers = sequence.length() - k + 1;
 

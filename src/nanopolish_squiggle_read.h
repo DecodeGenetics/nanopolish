@@ -57,6 +57,21 @@ struct SquiggleEvent
     float log_stdv;    // precompute for efficiency
 };
 
+// The raw event pos and state data for a read
+// added by dorukb
+struct ScrappieEventsBasecalls
+{
+    int idx;            // event index
+    int pos;            // pos in the read, basecalled, but not corrected for homopolymers.
+    int state;          // state of the event. k-mer state. 
+    float mean;         // current level mean in picoamps
+    float stdv;         // current level stdv
+    double start_time;  // start time of the event in seconds
+    float duration;     // duration of the event in seconds
+    std::string kmer;   //kmer of the state. (TODO: get rid of either this or state, they are the same.)
+
+};
+
 // Scaling parameters to account for per-read variations from the model
 struct SquiggleScalings
 {
@@ -240,6 +255,8 @@ class SquiggleRead
                                                                         const size_t k,
                                                                         const size_t strand_idx,
                                                                         const int label_shift) const;
+        // added by dorukb
+        std::vector<ScrappieEventsBasecalls> load_scrappie_events_and_basecalls(const std::string& scrappie_events_fn);
 
         // Sample-level access
         size_t get_sample_index_at_time(size_t sample_time) const;
@@ -264,11 +281,16 @@ class SquiggleRead
         SquiggleReadNucleotideType nucleotide_type;
         PoreType pore_type;
         std::string fast5_path;
+        std::string events_path; // added by dorukb
+        bool read_scrappie_events; // added by dorukb
         uint32_t read_id;
         std::string read_sequence;
 
         // one event sequence for each strand
         std::vector<SquiggleEvent> events[2];
+
+        // one event pos and state sequence for each strand -- added by dorukb
+        std::vector<ScrappieEventsBasecalls> basecalled_scrappie_events[2];
 
         // scaling parameters for each strand
         SquiggleScalings scalings[2];

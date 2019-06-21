@@ -9,14 +9,49 @@
 #include <map>
 #include <iterator>
 #include <iomanip>
+#include<string>  
+ 
 #include "nanopolish_profile_hmm.h"
 #include "nanopolish_variant.h"
 #include "nanopolish_haplotype.h"
 #include "nanopolish_model_names.h"
 #include "nanopolish_alignment_db.h"
 #include "nanopolish_variant_db.h"
-
+ 
 //#define DEBUG_HAPLOTYPE_SELECTION 1
+
+
+//added by dorukb
+Variant::Variant(const std::string& ref_name, const size_t& ref_position, 
+        const std::string& alt_seq, const std::string& var_seq)
+{    
+
+    this->ref_name = ref_name;
+    this->ref_position = ref_position-1;
+    this->alt_seq = alt_seq;
+    this->var_seq = var_seq;  
+
+     if (alt_seq == "<DEL>")
+    {   
+        this->ref_length = var_seq.length() +1;
+        this->alt_length = 1;
+    } 
+    else if (alt_seq == "<INS>") 
+    {
+        this->ref_length = 1;
+        this->alt_length = var_seq.length() +1;
+        //std::cout << "this->alt_length: " << this->alt_length << std::endl;
+
+    } 
+    else 
+    {
+        std::cout << "Only insertions and deletions are currently supported." << std::endl;
+        std::abort(); 
+    }
+}
+ 
+  
+   
 
 std::string Variant::make_vcf_tag_string(const std::string& tag,
                                          const std::string& id,
@@ -30,17 +65,17 @@ std::string Variant::make_vcf_tag_string(const std::string& tag,
     return ss.str();
 }
 
-void Variant::write_vcf_header(FILE* fp,
+void Variant::write_vcf_header(FILE* fp, 
                                const std::vector<std::string>& tag_lines)
 {
-
+ 
     fprintf(fp, "##fileformat=VCFv4.2\n");
     for(const std::string& line : tag_lines) {
         fprintf(fp, "%s\n", line.c_str());
-    }
+    } 
     fprintf(fp, "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample\n");
 }
-
+  
 // return a new copy of the string with gap symbols removed
 std::string remove_gaps(const std::string& str)
 {
@@ -49,7 +84,7 @@ std::string remove_gaps(const std::string& str)
     return ret;
 }
 
-std::vector<Variant> read_variants_from_file(const std::string& filename)
+std::vector<Variant> read_variants_from_file(const std::string& filename, bool isSVvcf)
 {
     std::vector<Variant> out;
     std::ifstream infile(filename);
@@ -62,7 +97,7 @@ std::vector<Variant> read_variants_from_file(const std::string& filename)
         }
 
         // parse variant
-        Variant v(line);
+        Variant v(line, isSVvcf);
         v.info.clear();
         out.push_back(v);
     }
@@ -72,7 +107,8 @@ std::vector<Variant> read_variants_from_file(const std::string& filename)
 std::vector<Variant> read_variants_for_region(const std::string& filename,
                                               const std::string& contig,
                                               int region_start,
-                                              int region_end)
+                                              int region_end,
+                                              bool isSVvcf)
 {
     std::vector<Variant> out;
     std::ifstream infile(filename);
@@ -91,10 +127,10 @@ std::vector<Variant> read_variants_for_region(const std::string& filename,
            (int)v.ref_position >= region_start &&
            (int)v.ref_position <= region_end)
         {
-            v.info.clear();
+            //v.info.clear();
             out.push_back(v);
         }
-    }
+    }    
     return out;
 }
 
@@ -233,7 +269,7 @@ void score_variant_group(VariantGroup& variant_group,
     for(size_t ri = 0; ri < input.size(); ++ri) {
         for(size_t hi = 0; hi < haplotypes.size(); ++hi) {
             const auto& current = haplotypes[hi];
-
+  
             // Expand the haplotype to contain all representations of this sequence by adding methylation
             std::vector<HMMInputSequence> sequences = generate_methylated_alternatives(current.first.get_sequence(), methylation_types);
             double score = profile_hmm_score_set(sequences, input[ri], alignment_flags);
@@ -243,7 +279,7 @@ void score_variant_group(VariantGroup& variant_group,
                 variant_group.set_combination_read_score(current.second, read_ids[ri], score);
 //                set(read_haplotype_scores, ri, hi, score);
 //                read_sum[ri] = add_logs(read_sum[ri], score);
-            }
+            } 
         }
     }
 
@@ -275,10 +311,10 @@ std::vector<Variant> simple_call(VariantGroup& variant_group,
     if (variant_combos_in_group <= 1) {
         return std::vector<Variant>();
     }
-
+ 
     Combinations vc_sets(variant_combos_in_group, ploidy, CO_WITH_REPLACEMENT);
     while(!vc_sets.done()) {
-
+ 
         // The current combination is represented as a vector of haplotype IDs
         std::vector<size_t> current_set = vc_sets.get();
         
@@ -541,7 +577,7 @@ std::vector<Variant> multi_call(VariantGroup& variant_group,
             // normalize
             for(size_t hi = 0; hi < haplotypes.size(); ++hi) {
                 double t = get(z, ri, hi);
-                double et = exp(t - lognorm);
+                double et = exp(t - lognorm); 
                 set(z, ri, hi, et);
                 nk[hi] += et;
             }
@@ -597,7 +633,7 @@ std::vector<Variant> multi_call(VariantGroup& variant_group,
     std::vector<double> scores(genotypes.size(), 0.0);
     for(size_t i = 0; i < genotypes.size(); ++i) {
         const auto& genotype = genotypes[i];
-
+ 
         // Score all reads against this genotype
         for(size_t ri = 0; ri < group_reads.size(); ++ri) {
             
@@ -613,12 +649,12 @@ std::vector<Variant> multi_call(VariantGroup& variant_group,
             }
             scores[i] += read_sum;
         }
-    }
-
+    }  
+ 
     for(size_t si = 0; si < scores.size(); ++si) {
         std::string perm_pp = prettyprint_genotype(genotypes[si], haplotypes, all_groups);
         fprintf(stderr, "perm[%zu]: %s %.2lf\n", si, perm_pp.c_str(), scores[si]);
-    }
+    } 
 
 #if 0
     // TODO: set an appropriate threshold
@@ -647,7 +683,7 @@ std::vector<Variant> multi_call(VariantGroup& variant_group,
             v.quality = best_score - base_score;
         } else {
             v.quality = 0.0;
-        }
+        }    
         v.add_info("TotalReads", group_reads.size());
         v.add_info("AlleleCount", var_count);
         v.genotype = make_genotype(var_count, ploidy);
@@ -659,6 +695,78 @@ std::vector<Variant> multi_call(VariantGroup& variant_group,
     free_matrix(read_haplotype_scores);
     free_matrix(z);
     return output_variants;
+}
+
+
+//added by dorukb;
+double score_variant_for_record(const Variant& input_variant,
+                                  Haplotype base_haplotype, 
+                                  const HMMInputData& input,
+                                  const uint32_t alignment_flags,
+                                  const std::vector<std::string>& methylation_types,
+                                  double& base_score,
+                                  double& variant_score,
+                                  int& ref_seq_len,
+                                  int& alt_seq_len,
+                                  int& hmm_input_len)
+{
+    Haplotype variant_haplotype = base_haplotype;
+    variant_haplotype.apply_variant(input_variant);
+
+    std::string base_seq_upper = base_haplotype.get_sequence();
+    std::string base_seq_lower = base_haplotype.get_sequence();
+    transform(base_seq_upper.begin(), base_seq_upper.end(), base_seq_upper.begin(), toupper);
+    transform(base_seq_lower.begin(), base_seq_lower.end(), base_seq_lower.begin(), tolower);
+
+    base_score = profile_hmm_score(base_seq_upper, input, alignment_flags);
+    double base_score_lower = profile_hmm_score(base_seq_lower, input, alignment_flags);
+    ref_seq_len = base_seq_upper.length();
+   
+    std::string alt_seq_upper = variant_haplotype.get_sequence();
+    std::string alt_seq_lower = variant_haplotype.get_sequence();
+    transform(alt_seq_upper.begin(), alt_seq_upper.end(), alt_seq_upper.begin(), toupper);
+    transform(alt_seq_lower.begin(), alt_seq_lower.end(), alt_seq_lower.begin(), tolower);
+
+
+    variant_score = profile_hmm_score(alt_seq_upper, input, alignment_flags);
+    double variant_score_lower = profile_hmm_score(alt_seq_lower, input, alignment_flags);
+
+
+   
+    alt_seq_len = alt_seq_upper.length();
+    hmm_input_len = input.event_stop_idx - input.event_start_idx + 1;
+    
+    
+    //#pragma omp atomic
+    //total_score += (variant_score - base_score);
+
+    //#pragma omp atomic
+    double total_score = (variant_score - base_score);
+
+    return(total_score);
+
+
+}
+
+
+//added by dorukb
+double score_haplotype_for_record(Haplotype a_haplotype, 
+                                  const HMMInputData& input,
+                                  const uint32_t alignment_flags,
+                                  const std::vector<std::string>& methylation_types,
+                                  int& seq_len,
+                                  int& hmm_input_len)
+{
+  
+    std::string seq_upper = a_haplotype.get_sequence();
+    transform(seq_upper.begin(), seq_upper.end(), seq_upper.begin(), toupper);
+
+    double score = profile_hmm_score(seq_upper, input, alignment_flags);
+
+    seq_len = seq_upper.length();
+    hmm_input_len = input.event_stop_idx - input.event_start_idx + 1;
+    
+    return(score);
 }
 
 //
@@ -679,7 +787,7 @@ Variant score_variant_thresholded(const Variant& input_variant,
     std::vector<HMMInputSequence> base_sequences = generate_methylated_alternatives(base_haplotype.get_sequence(), methylation_types);
     std::vector<HMMInputSequence> variant_sequences = generate_methylated_alternatives(variant_haplotype.get_sequence(), methylation_types);
     
-    double total_score = 0.0f;
+    double total_score = 0.0f; 
     #pragma omp parallel for
     for(size_t j = 0; j < input.size(); ++j) {
 

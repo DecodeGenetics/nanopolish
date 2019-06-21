@@ -43,7 +43,18 @@ void parse_region_string(const std::string& region, std::string& contig, int& st
     std::replace(region_copy.begin(), region_copy.end(), '-', ' ');
 
     std::stringstream parser(region_copy);
+    
+    //modified by dorukb such that we could use the contig name only.
+    // TODO must be checked for compatibility with original nanopolish
+    if (region_copy.find(' ') == std::string::npos) // only contig name
+        parser >> contig;
+    
+    start = 0;
+    end=0;
     parser >> contig >> start >> end;
+
+    std::cout << "parser start: " << start << std::endl;
+    std::cout << "parser end: " << end << std::endl;
 }
 
 SemVer parse_semver_string(const std::string& semver_str)

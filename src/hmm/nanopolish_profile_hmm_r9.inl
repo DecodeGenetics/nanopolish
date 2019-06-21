@@ -80,6 +80,8 @@ class ProfileHMMForwardOutputR9
         //
         inline void update_cell(uint32_t row, uint32_t col, const HMMUpdateScores& scores, float lp_emission)
         {
+            // added assertion by dorukb to make sure about the size of scores.x
+            assert(sizeof(scores.x)/sizeof(float) >= HMT_NUM_MOVEMENT_TYPES);
             float sum = scores.x[0];
             for(auto i = 1; i < HMT_NUM_MOVEMENT_TYPES; ++i) {
                 sum = add_logs(sum, scores.x[i]);
@@ -217,7 +219,7 @@ inline std::vector<float> make_pre_flanking(const HMMInputData& data,
                        log_probability_background(*data.read, event_idx, data.strand) + // emit from background
                        pre_flank[i - 1]; // this accounts for the transition from the start & to the silent pre
     
-    }
+    } 
 
     return pre_flank;
 }

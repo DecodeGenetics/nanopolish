@@ -13,7 +13,7 @@
 //#define DEBUG_ADAPTIVE 1
 //#define DEBUG_PRINT_STATS 1
 
-//
+// 
 SquiggleScalings estimate_scalings_using_mom(const std::string& sequence,
                                              const PoreModel& pore_model,
                                              const event_table& et)
@@ -54,7 +54,7 @@ SquiggleScalings estimate_scalings_using_mom(const std::string& sequence,
 #if DEBUG_PRINT_STATS
     fprintf(stderr, "event mean: %.2lf kmer mean: %.2lf shift: %.2lf\n", event_level_sum / et.n, kmer_level_sum / n_kmers, out.shift);
     fprintf(stderr, "event sq-mean: %.2lf kmer sq-mean: %.2lf scale: %.2lf\n", event_level_sq_sum / et.n, kmer_level_sq_sum / n_kmers, out.scale);
-    fprintf(stderr, "truth shift: %.2lf scale: %.2lf\n", pore_model.shift, pore_model.scale);
+    //fprintf(stderr, "truth shift: %.2lf scale: %.2lf\n", pore_model.shift, pore_model.scale);
 #endif
     return out;
 }
@@ -366,6 +366,8 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
 #if DEBUG_PRINT_STATS
     // Build a debug event->kmer map
     std::vector<size_t> kmer_for_event(read.events[strand_idx].size());
+    std::cout << "read.events[strand_idx].size(): " << read.events[strand_idx].size() << std::endl;
+    std::cout << "read.base_to_event_map.size(): " << read.base_to_event_map.size() << std::endl;
     for(size_t ki = 0; ki < read.base_to_event_map.size(); ++ki) {
         IndexPair& elem = read.base_to_event_map[ki].indices[0];
         if(elem.start == -1) {
@@ -384,8 +386,9 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
     const uint8_t FROM_U = 1;
     const uint8_t FROM_L = 2;
     
-    // qc
-    double min_average_log_emission = -5.0;
+    // qc -- modified by dorukb from -5.0 arbitrarily down to -100 to remove this qc in order to accept all suggested reads.
+    // TODO: change it back to -5 and evaluate the effect.
+    double min_average_log_emission = -100.0;
 
     // banding
     int bandwidth = 1000;
@@ -403,6 +406,13 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
     // Calculate the minimum event index that is within the band for each read kmer
     // We determine this using the expected number of events observed per kmer
     double events_per_kmer = (double)n_events / n_kmers;
+
+#if DEBUG_PRINT_STATS
+std::cout << "n_events: " << n_events << std::endl;
+std::cout << "n_kmers: " << n_kmers << std::endl;
+std::cout << "events_per_kmer: " << events_per_kmer << std::endl;
+#endif
+
     std::vector<int> min_event_idx_by_kmer(n_kmers);
     for(size_t ki = 0; ki < n_kmers; ++ki) {
         int expected_event_idx = (double)(ki * events_per_kmer);
@@ -498,6 +508,11 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
     fprintf(stderr, "[orgback] ei: %d ki: %d s: %.2f\n", curr_event_idx, curr_k_idx, max_score);
 #endif
 
+
+#if DEBUG_PRINT_STATS
+std::cout << "curr_event_idx: " << curr_event_idx << std::endl;
+#endif
+
     // debug stats
     double sum_emission = 0;
     double n_aligned_events = 0;
@@ -553,6 +568,10 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
         }   
     }
     std::reverse(out.begin(), out.end());
+#if DEBUG_PRINT_STATS
+        std::cout << "out size: " << out.size() << std::endl;
+
+#endif
 
 #if DEBUG_PRINT_MATRIX
     // Columm-wise debugging
@@ -590,6 +609,13 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
     
     bool failed = false;
     if(avg_log_emission < min_average_log_emission || !spanned) {
+
+        #if DEBUG_PRINT_STATS
+            std::cout << "avg_log_emission: " << avg_log_emission << std::endl;
+            std::cout << "min_average_log_emission: " << min_average_log_emission << std::endl;
+            std::cout << "spanned: " << spanned << std::endl;
+        #endif
+
         failed = true;
         out.clear();
     }
