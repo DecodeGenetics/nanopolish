@@ -300,12 +300,12 @@ std::vector<HMMInputData> AlignmentDB::get_event_subsequences(const std::string&
 	for(size_t i = 0; i < m_event_records.size(); ++i) {
 		const EventAlignmentRecord& record = m_event_records[i];
 		if(record.aligned_events.empty()) {
-			std::cout << "record's aligned events is empty." << std::endl;
+			//std::cout << "record's aligned events is empty." << std::endl;
 			continue;
 		}
 
 		if(!record.sr->has_events_for_strand(record.strand)) {
-			std::cout << "record doesn't have events for the strand." << std::endl;
+			//std::cout << "record doesn't have events for the strand." << std::endl;
 			continue;
 		}
 
@@ -1080,7 +1080,7 @@ bool AlignmentDB::_find_iter_by_ref_bounds(const std::vector<AlignedPair>& pairs
 	
 	if(start_iter == pairs.end() || stop_iter == pairs.end())
 	{
-		std::cout << "iter ends are not bounded." << std::endl;
+		//std::cout << "iter ends are not bounded." << std::endl;
 		return false;
 	}
 

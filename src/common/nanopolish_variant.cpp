@@ -9,8 +9,8 @@
 #include <map>
 #include <iterator>
 #include <iomanip>
-#include<string>  
- 
+#include<string>   
+  
 #include "nanopolish_profile_hmm.h"
 #include "nanopolish_variant.h"
 #include "nanopolish_haplotype.h"
@@ -43,11 +43,11 @@ Variant::Variant(const std::string& ref_name, const size_t& ref_position,
         //std::cout << "this->alt_length: " << this->alt_length << std::endl;
 
     } 
-    else 
-    {
-        std::cout << "Only insertions and deletions are currently supported." << std::endl;
-        std::abort(); 
-    }
+    // else 
+    // {
+    //     std::cout << "Only insertions and deletions are currently supported." << std::endl;
+    //     std::abort(); 
+    // }
 }
  
   

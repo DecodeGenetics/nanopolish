@@ -193,13 +193,13 @@ struct Variant
     { 
       std::regex regex_seq_info(";END=(.*);");
       auto regex_it = std::sregex_iterator(info.begin(), info.end(), regex_seq_info);
-      
+       
       
       if (regex_it != std::sregex_iterator()) // there is a match (it should be)
       {    
         //std::cout << " regex worked." << std::endl;
-        std::cout << std::abs( atoi( (((*regex_it)[1]).str()).c_str()) - ref_position) << std::endl;
-        std::cout << ref_position << std::endl;
+        //std::cout << std::abs( atoi( (((*regex_it)[1]).str()).c_str()) - ref_position) << std::endl;
+        //std::cout << ref_position << std::endl;
         size_t end_site = atoi( (((*regex_it)[1]).str()).c_str());
         if (end_site >= ref_position)
         {
@@ -212,8 +212,8 @@ struct Variant
         ref_length += 1;
         
         alt_length = 1; // vcf format specification for a deletion ALT has length 1
-        std::cout << " ref_length" << ref_length<< std::endl;
-        std::cout << " alt_length" << alt_length << std::endl;
+        //std::cout << " ref_length" << ref_length<< std::endl;
+        //std::cout << " alt_length" << alt_length << std::endl;
       } 
       else
       {

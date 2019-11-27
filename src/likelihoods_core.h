@@ -74,6 +74,8 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 	const std::vector<SequenceAlignmentRecordInfo>& seq_records, 
 	const Variant& test_variant, const int flanking_sequence_amount, const std::vector<std::string>& methylation_types, FILE* out_fp);
 
+void print_msg_unusable_reads(const Variant& test_variant, const SequenceAlignmentRecordInfo& rec, const std::string& flank, const std::string& msg);
+
 
 void print_result_to_csv(FILE* out_fp, const std::string& contig, const SequenceAlignmentRecordInfo& rec, 
 	const Variant& test_variant, const int variant_start, const int variant_len, const int event_length, const int flanking_sequence_amount, 

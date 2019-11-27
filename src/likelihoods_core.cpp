@@ -322,6 +322,7 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 			if (!found)
 			{
 				print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "BEGINPOS_ERROR");
+				print_msg_unusable_reads(test_variant, rec, "LEFT", "BEGINPOS_ERROR");
 				continue;
 
 			}
@@ -331,6 +332,7 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 			if (!found)
 			{
 				print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "LEFTFLANKPOS_NOTFOUND");
+				print_msg_unusable_reads(test_variant, rec, "LEFT", "LEFTFLANKPOS_NOTFOUND");
 				continue;
 			}
 
@@ -339,8 +341,8 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 			//std::cout << "variant_leftflank_inread: " << variant_leftflank_inread << std::endl;
 			if (std::binary_search(test_variant.supporting_reads.begin(), test_variant.supporting_reads.end(), rec.read_name) && read_beginPos != variant_leftflank_inread)
 			{
-				std::cout << rec.read_name << std::endl;
-				//std::cout << "Read supports the SV!" << std::endl;
+				//std::cout << rec.read_name << std::endl;
+				//std::cout << "Read supports the SV! left" << std::endl;
 			
 				// get the event sequence.
 				int variant_readPos, readpos_start_for_event, readpos_end_for_event;
@@ -350,7 +352,8 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 
 				if (!successful)
 				{	
-					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "BAD_QUALITY");
+					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "EVENT_MISMATCH");
+					print_msg_unusable_reads(test_variant, rec, "LEFT", "EVENT_MISMATCH");
 					continue;
 				}
 
@@ -364,6 +367,7 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 				if (!is_left_flanking)
 				{
 					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "POS_TOO_AWAY");
+					print_msg_unusable_reads(test_variant, rec, "LEFT", "POS_TOO_AWAY");
 					continue;
 				}
 
@@ -372,8 +376,8 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 				int base_seqlen, base_hmm_input_len;
 				double base_score = score_haplotype_for_record(base_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, base_seqlen, base_hmm_input_len);
 				
-				std::cout << "base_score: " << base_score << std::endl;
-				std::cout << "base_seqlen: " << base_seqlen << std::endl;
+				//std::cout << "base_score: " << base_score << std::endl;
+				//std::cout << "base_seqlen: " << base_seqlen << std::endl;
 				
 
 				// get the alternative haplotype for left flank
@@ -384,6 +388,7 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 					if (!is_left_flanking)
 					{
 						print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "POS_TOO_AWAY");
+						print_msg_unusable_reads(test_variant, rec, "LEFT", "POS_TOO_AWAY");
 						continue;
 					}
 
@@ -397,8 +402,8 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 				// get the alt likelihood.
 				int alt_seqlen, alt_hmm_input_len;
 				double alt_score = score_haplotype_for_record(alt_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, alt_seqlen, alt_hmm_input_len);
-				std::cout << "alt_score: " << alt_score << std::endl;
-				std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
+				//std::cout << "alt_score: " << alt_score << std::endl;
+				//std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
 
 				double likelihood_diff = alt_score - base_score;
 
@@ -408,13 +413,15 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 			}
 			else
 			{
-				std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
+				//std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
+				print_msg_unusable_reads(test_variant, rec, "LEFT", "READ_NOSUPPORT");
 			}
 
 		}
 		catch (std::runtime_error const & e)
 		{
-			print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "NAN_SCORE");
+			print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "READ_ERROR");
+			print_msg_unusable_reads(test_variant, rec, "LEFT", "READ_ERROR");
 			continue;
 
 		}
@@ -440,7 +447,9 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 			bool found = alignments._find_read_pos_from_ref_pos(rec.aligned_bases, rec.beginPos, read_beginPos);
 			
 			if (!found)
-			{	print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "BEGINPOS_ERROR");
+			{	
+				print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "BEGINPOS_ERROR");
+				print_msg_unusable_reads(test_variant, rec, "RIGHT", "BEGINPOS_ERROR");
 				continue;
 			}
 		
@@ -449,7 +458,9 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 
 			if (std::binary_search(test_variant.supporting_reads.begin(), test_variant.supporting_reads.end(), rec.read_name) && right_flank_is_valid)
 			{
-			
+				//std::cout << rec.read_name << std::endl;
+				//std::cout << "Read supports the SV! right" << std::endl;
+
 				// get the event sequence.
 				int variant_readPos, readpos_start_for_event, readpos_end_for_event;
 				bool successful;
@@ -459,7 +470,8 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 
 				if (!successful)
 				{
-					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "BAD_QUALITY");
+					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "EVENT_MISMATCH");
+					print_msg_unusable_reads(test_variant, rec, "RIGHT", "EVENT_MISMATCH");
 					continue;
 				}
 
@@ -473,14 +485,15 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 				if (!is_right_flanking)
 				{
 					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "POS_TOO_AWAY");
+					print_msg_unusable_reads(test_variant, rec, "RIGHT", "POS_TOO_AWAY");
 					continue;
 				}
 
 				// get the ref likelihood.
 				int base_seqlen, base_hmm_input_len;
 				double base_score = score_haplotype_for_record(base_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, base_seqlen, base_hmm_input_len);
-				std::cout << "base_score: " << base_score << std::endl;
-				std::cout << "base_seqlen: " << base_seqlen << std::endl;
+				//std::cout << "base_score: " << base_score << std::endl;
+				//std::cout << "base_seqlen: " << base_seqlen << std::endl;
 				
 				Haplotype alt_haplotype;
 				if (test_variant.alt_seq == "<DEL>")
@@ -490,6 +503,7 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 					if (!is_right_flanking)
 					{
 						print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "POS_TOO_AWAY");
+						print_msg_unusable_reads(test_variant, rec, "RIGHT", "POS_TOO_AWAY");
 						continue;
 					}
 				}
@@ -502,8 +516,8 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 				// get the alt likelihood.
 				int alt_seqlen, alt_hmm_input_len;
 				double alt_score = score_haplotype_for_record(alt_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, alt_seqlen, alt_hmm_input_len);
-				std::cout << "alt_score: " << alt_score << std::endl;
-				std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
+				//std::cout << "alt_score: " << alt_score << std::endl;
+				//std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
 
 				double likelihood_diff = alt_score - base_score;
 				
@@ -513,15 +527,15 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 			}
 			else
 			{
-				std::cout << rec.read_name << std::endl;
-				std::cout << "It's read_beginPos was: " << read_beginPos << std::endl;
-				std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
+				//std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
+				print_msg_unusable_reads(test_variant, rec, "RIGHT", "READ_NOSUPPORT");
 			}
 
 		}
 		catch (std::runtime_error const & e)
 		{
-			print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "NAN_SCORE");
+			print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "READ_ERROR");
+			print_msg_unusable_reads(test_variant, rec, "RIGHT", "READ_ERROR");
 			continue;
 		}
 
@@ -529,6 +543,10 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 	
 }
 
+void print_msg_unusable_reads(const Variant& test_variant, const SequenceAlignmentRecordInfo& rec, const std::string& flank, const std::string& msg)
+{
+	std::cout << test_variant.ref_name << "." << test_variant.ref_position << "." << test_variant.SV_ID << "," << flank << "," << rec.read_name << "," << msg << std::endl;
+}
 
 void print_result_to_csv(FILE* out_fp, const std::string& contig, const SequenceAlignmentRecordInfo& rec, 
 	const Variant& test_variant, const int variant_start, const int variant_len, const int event_length, const int flanking_sequence_amount, 

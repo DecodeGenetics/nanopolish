@@ -154,11 +154,13 @@ bool map_events_to_basecall(const SquiggleRead * sr, std::vector<int>& event_ind
 					}
 					else
 					{
-						std::cout << "first event must match " << std::endl;
+						//std::cout << "first event must match " << std::endl;
 						// std::cout << et[i].kmer << " is the et[i].kmer" <<  std::endl;
 						// std::cout << basecall.substr(0, kmer_size) << " is the basecall.substr(0, kmer_size)" <<  std::endl;
 						// std::cout <<  basecall.substr(0, 100)  <<  " IS THE seq." << std::endl;
-						std::abort();
+						// std::abort();
+						success = false;
+						break;
 					}
 				}
 				//for the non-initial events non-stay events,
@@ -224,8 +226,11 @@ bool map_events_to_basecall(const SquiggleRead * sr, std::vector<int>& event_ind
 								// std::cout << " basecall.length(): " <<  basecall.length() << std::endl;
 								// std::cout << "next_event_idx: " <<  next_event_idx << std::endl;
 								// std::cout << "et.size(): " <<  et.size() << std::endl;
-								std::cout << "partially done. Error" << std::endl;
-								std::abort();
+								
+								//std::cout << "partially done. Error" << std::endl;
+								// std::abort();
+								success = false;
+								break;
 
 							}
 
@@ -246,7 +251,10 @@ bool map_events_to_basecall(const SquiggleRead * sr, std::vector<int>& event_ind
 							if (i >= et.size() )
 							{
 								//std::cout << " not all substrings are aligned. Abort." << std::endl;
-								std::abort();
+								// std::abort();
+								success = false;
+								break;
+
 							}
 							event_indices_for_bases[et[i].pos + pos_missed_offset] = et[i].idx;
 							
@@ -267,7 +275,9 @@ bool map_events_to_basecall(const SquiggleRead * sr, std::vector<int>& event_ind
 							if ((et[i].pos + pos_missed_offset + 1 + kmer_size) > basecall.length() )
 							{
 								// std::cout << " not all events are aligned. Abort." << std::endl;
-								std::abort();
+								// std::abort();
+								success = false;
+								break;
 							}
 							
 						}
@@ -278,8 +288,10 @@ bool map_events_to_basecall(const SquiggleRead * sr, std::vector<int>& event_ind
 						// std::cout << "i: " << i  << " kmer: " << et[i].kmer << " pos: "<< et[i].pos 
 						// 	<< " pos_missed_offset: " << pos_missed_offset 
 						// 	<< " substr: " << basecall.substr(et[i].pos + pos_missed_offset, kmer_size) << std::endl;
-						std::cout << "No mismatch of events and substrings should occur. Aborting." << std::endl;
-						std::abort();
+						// std::cout << "No mismatch of events and substrings should occur. Aborting." << std::endl;
+						// std::abort();
+						success = false;
+						break;
 					}
 				}
 				

@@ -408,9 +408,9 @@ std::vector<AlignedPair> banded_simple_event_align(SquiggleRead& read, const Por
     double events_per_kmer = (double)n_events / n_kmers;
 
 #if DEBUG_PRINT_STATS
-std::cout << "n_events: " << n_events << std::endl;
-std::cout << "n_kmers: " << n_kmers << std::endl;
-std::cout << "events_per_kmer: " << events_per_kmer << std::endl;
+    std::cout << "n_events: " << n_events << std::endl;
+    std::cout << "n_kmers: " << n_kmers << std::endl;
+    std::cout << "events_per_kmer: " << events_per_kmer << std::endl;
 #endif
 
     std::vector<int> min_event_idx_by_kmer(n_kmers);
@@ -510,7 +510,7 @@ std::cout << "events_per_kmer: " << events_per_kmer << std::endl;
 
 
 #if DEBUG_PRINT_STATS
-std::cout << "curr_event_idx: " << curr_event_idx << std::endl;
+    std::cout << "curr_event_idx: " << curr_event_idx << std::endl;
 #endif
 
     // debug stats
@@ -570,7 +570,6 @@ std::cout << "curr_event_idx: " << curr_event_idx << std::endl;
     std::reverse(out.begin(), out.end());
 #if DEBUG_PRINT_STATS
         std::cout << "out size: " << out.size() << std::endl;
-
 #endif
 
 #if DEBUG_PRINT_MATRIX

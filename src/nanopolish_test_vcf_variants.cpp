@@ -262,19 +262,20 @@ void gather_reads_spanning_variant(FILE* out_fp)
 		const int SV_LEN_CUTOFF_TO_SEPARATE = 50;
 		const int TOO_SHORT_SV_LEN = 30;
 		const int TOO_LONG_SV_LEN = 1000000;
-		if ((variant_len < TOO_SHORT_SV_LEN) || (variant_len > TOO_LONG_SV_LEN))
-		{
-			// test the usual way, perhaps choose the begin/end coords better.
-			std::cout << variant_len << ": variant_len" << std::endl;
-			std::cout << test_variant.ref_position << ": test_variant.ref_position" << std::endl;
-			std::cout << "SV is too short or too long." << std::endl;
-		}
-		else
+		// if ((variant_len < TOO_SHORT_SV_LEN) || (variant_len > TOO_LONG_SV_LEN))
+		// {
+		// 	// test the usual way, perhaps choose the begin/end coords better.
+		// 	//std::cout << variant_len << ": variant_len" << std::endl;
+		// 	//std::cout << test_variant.ref_position << ": test_variant.ref_position" << std::endl;
+		// 	std::cout << "SV is too short or too long." << std::endl;
+		// }
+		//else
+		if ((variant_len >= TOO_SHORT_SV_LEN) && (variant_len <= TOO_LONG_SV_LEN))
 		{
 			if (test_variant.alt_seq == "<DEL>" || test_variant.alt_seq == "<INS>")
 			{	
 				// Doing LEFT FLANK.
-				std::cout << "Left Flank Analysis " << std::endl;
+				//std::cout << "Left Flank Analysis " << std::endl;
 				int min_required_ref_coord;
 				auto seq_records = get_min_leftflankrefpos_and_seqrecords(alignments, contig, variant_start, SV_LEN_CUTOFF_TO_SEPARATE, opt::bam_file, min_required_ref_coord);
 
@@ -283,7 +284,7 @@ void gather_reads_spanning_variant(FILE* out_fp)
 				left_flank_analysis(alignments, alignment_flags, contig, contig_length, seq_records, test_variant, opt::screen_flanking_sequence, opt::methylation_types, out_fp);
 
 				// Doing RIGHT FLANK
-				std::cout << "Right Flank Analysis " << std::endl;
+				//std::cout << "Right Flank Analysis " << std::endl;
 				int max_required_ref_coord;
 				seq_records = get_max_rightflankrefpos_and_seqrecords(alignments, contig, variant_start, test_variant.ref_length, SV_LEN_CUTOFF_TO_SEPARATE, opt::bam_file, max_required_ref_coord);
 
@@ -291,10 +292,10 @@ void gather_reads_spanning_variant(FILE* out_fp)
 				alignments.load_region_select_reads(contig, start_pos, std::min(max_required_ref_coord + BUFFER, contig_length), test_variant.supporting_reads);
 				right_flank_analysis(alignments, alignment_flags, contig, contig_length, seq_records, test_variant, opt::screen_flanking_sequence, opt::methylation_types, out_fp);
 			}
-			else
-			{
-				std::cout << "SVs other than DEL or INS not supported yet." << std::endl;
-			}
+			// else
+			// {
+			// 	std::cout << "SVs other than DEL or INS not supported yet." << std::endl;
+			// }
 		}
 	}
 
@@ -417,17 +418,15 @@ int test_vcf_variants_main(int argc, char** argv)
 	//If a window has been specified, only call variants/polish in that range
 	if(!opt::window.empty()) {
 		// Parse the window string
-		std::cout << "window is not empty" << std::endl;
 		parse_region_string(opt::window, contig, start_base, end_base);
 		contig_length = get_contig_length3(contig);
 		if (end_base == 0) // not altered by parse region
 			end_base = contig_length - 1;
 		end_base = std::min(end_base, contig_length - 1);
-		std::cout << "end is: " << end_base << std::endl;
-		std::cout << "start is: " << start_base << std::endl;
+		//std::cout << "end is: " << end_base << std::endl;
+		//std::cout << "start is: " << start_base << std::endl;
 	} else {
 		// otherwise, run on the whole genome
-		std::cout << "window is empty" << std::endl;
 
 		contig = get_single_contig_or_fail3();
 		contig_length = get_contig_length3(contig);

@@ -90,7 +90,7 @@ bool Haplotype::truncate_seq(int bp, bool isLeftEnd)
 	}
 	else
 	{
-		std::cout << " You are deleting more than the haplotype's length." << std::endl;
+		//std::cout << " You are deleting more than the haplotype's length." << std::endl;
 		return false;
 	}	
 
@@ -124,7 +124,6 @@ bool Haplotype::apply_variant(const Variant& v)
 		al = 1;
 
 		m_sequence.replace(derived_idx, rl, m_sequence.substr(derived_idx, 1));
-		std::cerr << "---------- [DEL] length = " << rl << std::endl;
 	}
 
 	// INS events
@@ -135,7 +134,6 @@ bool Haplotype::apply_variant(const Variant& v)
 		
 		rl = 1;
 		al = insertion_seq.length();
-		std::cerr << "---------- [INS] length and v.alt_length = " << al << "and" << v.alt_length << std::endl;
 		assert(al == v.alt_length);
 
 		m_sequence.replace(derived_idx, rl, insertion_seq);

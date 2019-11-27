@@ -53,8 +53,8 @@ void parse_region_string(const std::string& region, std::string& contig, int& st
     end=0;
     parser >> contig >> start >> end;
 
-    std::cout << "parser start: " << start << std::endl;
-    std::cout << "parser end: " << end << std::endl;
+    //std::cout << "parser start: " << start << std::endl;
+    //std::cout << "parser end: " << end << std::endl;
 }
 
 SemVer parse_semver_string(const std::string& semver_str)
