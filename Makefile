@@ -62,8 +62,8 @@ NP_INCLUDE=$(addprefix -I./, $(SUBDIRS))
 CPPFLAGS += $(H5_INCLUDE) $(HTS_INCLUDE) $(FAST5_INCLUDE) $(NP_INCLUDE) $(EIGEN_INCLUDE)
 
 # Main programs to build
-PROGRAM=nanopolish
-TEST_PROGRAM=nanopolish_test
+PROGRAM=nanopolish_sv
+TEST_PROGRAM=nanopolish_sv_test
 
 all: $(PROGRAM) $(TEST_PROGRAM)
 
