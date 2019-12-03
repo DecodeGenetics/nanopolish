@@ -31,7 +31,7 @@ static std::map< std::string, std::function<int(int, char**)> > programs = {
     {"help",        print_usage},
     {"--help",      print_usage},
     {"--version",   print_version},
-    //{"index",       index_main},
+    {"index",       index_main},
     //{"extract",     extract_main},
     //{"eventalign",  eventalign_main},
     //{"getmodel",    getmodel_main},
