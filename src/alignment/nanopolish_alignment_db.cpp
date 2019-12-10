@@ -618,7 +618,7 @@ void AlignmentDB::_clear_region()
 
 //added by dorukb
 bool AlignmentDB::find_event_coords_for_region_for_record(const SequenceAlignmentRecordInfo& sequence_record, 
-										const int start_pos, const int stop_pos, int& event_begin_idx, int& event_end_idx)
+										const int start_pos, const int stop_pos, int& event_begin_idx, int& event_end_idx, bool& event_mismatch)
 {
 
 	int r1 = 0, r2 = 0;
@@ -631,7 +631,7 @@ bool AlignmentDB::find_event_coords_for_region_for_record(const SequenceAlignmen
 	}
 
 	std::vector<int> event_inds_for_bases;
-	bool success = find_scrappie_events_for_basecall(sequence_record, event_inds_for_bases);
+	bool success = find_scrappie_events_for_basecall(sequence_record, event_inds_for_bases, event_mismatch);
 
 	if (success)
 	{
@@ -649,11 +649,11 @@ bool AlignmentDB::find_event_coords_for_region_for_record(const SequenceAlignmen
 
 //added by dorukb
 bool AlignmentDB::find_event_coords_for_given_read_coords(const SequenceAlignmentRecordInfo& sequence_record, 
-										const int r1, const int r2, int& event_begin_idx, int& event_end_idx) const
+										const int r1, const int r2, int& event_begin_idx, int& event_end_idx, bool& event_mismatch) const
 {
 	
 	std::vector<int> event_inds_for_bases;
-	bool success = find_scrappie_events_for_basecall(sequence_record, event_inds_for_bases);
+	bool success = find_scrappie_events_for_basecall(sequence_record, event_inds_for_bases, event_mismatch);
 
 	if (success)
 	{
@@ -672,9 +672,9 @@ bool AlignmentDB::find_event_coords_for_given_read_coords(const SequenceAlignmen
 }
 
 
-bool AlignmentDB::find_scrappie_events_for_basecall(const SequenceAlignmentRecordInfo& sequence_record, std::vector<int>& event_indices_for_bases) const
+bool AlignmentDB::find_scrappie_events_for_basecall(const SequenceAlignmentRecordInfo& sequence_record, std::vector<int>& event_indices_for_bases, bool& event_mismatch) const
 {
-
+	event_mismatch = false;
 	SquiggleRead* sr;
 	if (m_squiggle_read_map.find(sequence_record.read_name) != m_squiggle_read_map.end())
 	{
@@ -687,7 +687,8 @@ bool AlignmentDB::find_scrappie_events_for_basecall(const SequenceAlignmentRecor
 		std::abort();
 	}
 
-	bool success = map_events_to_basecall(sr, event_indices_for_bases);
+	
+	bool success = map_events_to_basecall(sr, event_indices_for_bases, event_mismatch);
 	return success;
 	 
 }

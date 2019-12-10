@@ -128,13 +128,13 @@ class AlignmentDB
 
         //added by dorukb
         bool find_event_coords_for_region_for_record(const SequenceAlignmentRecordInfo& sequence_record, 
-                                        const int start_pos, const int stop_pos, int& event_begin_idx, int& event_end_idx);
+                                        const int start_pos, const int stop_pos, int& event_begin_idx, int& event_end_idx, bool& event_mismatch);
 
 
 
         //added by dorukb
         bool find_event_coords_for_given_read_coords(const SequenceAlignmentRecordInfo& sequence_record, 
-                                        const int r1, const int r2, int& event_begin_idx, int& event_end_idx) const;
+                                        const int r1, const int r2, int& event_begin_idx, int& event_end_idx, bool& event_mismatch) const;
 
      
         std::vector<HMMInputData> get_events_aligned_to(const std::string& contig, int position) const;
@@ -187,7 +187,7 @@ class AlignmentDB
                                                 const std::string& sequence_bam) const;
 
 
-        bool find_scrappie_events_for_basecall(const SequenceAlignmentRecordInfo& sequence_record, std::vector<int>& event_indices_for_bases) const;
+        bool find_scrappie_events_for_basecall(const SequenceAlignmentRecordInfo& sequence_record, std::vector<int>& event_indices_for_bases, bool& event_mismatch) const;
 
 
 
