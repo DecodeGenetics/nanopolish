@@ -52,7 +52,7 @@ std::vector<SequenceAlignmentRecordInfo> get_max_rightflankrefpos_and_seqrecords
  
 
 HMMInputData get_events_and_read_coords_for_leftflank(const AlignmentDB& alignments, const SequenceAlignmentRecordInfo& rec, int flanking_sequence_amount,
-									const int variant_start, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& success)
+									const int variant_start, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& success, bool& event_mismatch)
 {
 	int read_beginPos = 0;
 	alignments._find_read_pos_from_ref_pos(rec.aligned_bases, rec.beginPos, read_beginPos);
@@ -84,7 +84,8 @@ HMMInputData get_events_and_read_coords_for_leftflank(const AlignmentDB& alignme
 
 	// now get the event begin and end.
 	int event_begin_idx, event_end_idx;
-	success = alignments.find_event_coords_for_given_read_coords(rec, readpos_start_for_event, readpos_end_for_event, event_begin_idx, event_end_idx);
+	event_mismatch = false;
+	success = alignments.find_event_coords_for_given_read_coords(rec, readpos_start_for_event, readpos_end_for_event, event_begin_idx, event_end_idx, event_mismatch);
 
 	if (success)
 	{
@@ -103,7 +104,7 @@ HMMInputData get_events_and_read_coords_for_leftflank(const AlignmentDB& alignme
 
 
 HMMInputData get_events_and_read_coords_for_rightflank(const AlignmentDB& alignments, const SequenceAlignmentRecordInfo& rec, int flanking_sequence_amount,
-									const int variant_start, const int variant_ref_len, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& success)
+									const int variant_start, const int variant_ref_len, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& success, bool& event_mismatch)
 {
 
 	// first fix the end site.
@@ -134,7 +135,8 @@ HMMInputData get_events_and_read_coords_for_rightflank(const AlignmentDB& alignm
 
 	// now get the event begin and end.
 	int event_begin_idx, event_end_idx;
-	success = alignments.find_event_coords_for_given_read_coords(rec, readpos_start_for_event, readpos_end_for_event, event_begin_idx, event_end_idx);
+	event_mismatch = false;
+	success = alignments.find_event_coords_for_given_read_coords(rec, readpos_start_for_event, readpos_end_for_event, event_begin_idx, event_end_idx, event_mismatch);
 
 	if (success)
 	{
@@ -339,52 +341,44 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 			//std::cout  << "If those are equal then the alignment is left soft clipped and we don't want it." << std::endl;
 			//std::cout << "read_beginPos: " << read_beginPos << std::endl;
 			//std::cout << "variant_leftflank_inread: " << variant_leftflank_inread << std::endl;
-			if (std::binary_search(test_variant.supporting_reads.begin(), test_variant.supporting_reads.end(), rec.read_name) && read_beginPos != variant_leftflank_inread)
+			if (std::binary_search(test_variant.supporting_reads.begin(), test_variant.supporting_reads.end(), rec.read_name)) 
 			{
-				//std::cout << rec.read_name << std::endl;
-				//std::cout << "Read supports the SV! left" << std::endl;
-			
-				// get the event sequence.
-				int variant_readPos, readpos_start_for_event, readpos_end_for_event;
-				bool successful;
-				HMMInputData event_sequence_scrappie = get_events_and_read_coords_for_leftflank(alignments, rec, flanking_sequence_amount,
-																				variant_start, variant_readPos, readpos_start_for_event, readpos_end_for_event, successful);
 
-				if (!successful)
-				{	
-					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "EVENT_MISMATCH");
-					print_msg_unusable_reads(test_variant, rec, "LEFT", "EVENT_MISMATCH");
-					continue;
-				}
-
-				int event_length =  event_sequence_scrappie.event_stop_idx - event_sequence_scrappie.event_start_idx + 1;
-				// get the base haplotype for left flank
-				int base_ref_beginPos, base_ref_endPos;
-				bool is_left_flanking;
-				Haplotype base_haplotype = base_haplotype_for_leftflank(alignments, rec, contig, contig_length, readpos_start_for_event, readpos_end_for_event, 
-					variant_start, variant_readPos, base_ref_beginPos, base_ref_endPos, is_left_flanking);
-
-				if (!is_left_flanking)
+				if (read_beginPos != variant_leftflank_inread)
 				{
-					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "POS_TOO_AWAY");
-					print_msg_unusable_reads(test_variant, rec, "LEFT", "POS_TOO_AWAY");
-					continue;
-				}
-
-
-				// get the ref likelihood.
-				int base_seqlen, base_hmm_input_len;
-				double base_score = score_haplotype_for_record(base_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, base_seqlen, base_hmm_input_len);
+					//std::cout << rec.read_name << std::endl;
+					//std::cout << "Read supports the SV! left" << std::endl;
 				
-				//std::cout << "base_score: " << base_score << std::endl;
-				//std::cout << "base_seqlen: " << base_seqlen << std::endl;
-				
+					// get the event sequence.
+					int variant_readPos, readpos_start_for_event, readpos_end_for_event;
+					bool successful;
+					bool event_mismatch;
+					HMMInputData event_sequence_scrappie = get_events_and_read_coords_for_leftflank(alignments, rec, flanking_sequence_amount,
+																					variant_start, variant_readPos, readpos_start_for_event, readpos_end_for_event, successful, event_mismatch);
 
-				// get the alternative haplotype for left flank
-				Haplotype alt_haplotype;
-				if (test_variant.alt_seq == "<DEL>")
-				{
-					alt_haplotype = alt_haplotype_for_leftflank_DEL(alignments, contig, contig_length, test_variant, readpos_start_for_event, readpos_end_for_event, variant_start, variant_readPos, variant_len, base_ref_beginPos, is_left_flanking);
+					if (!successful)
+					{	
+						if (event_mismatch)
+						{
+							print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "EVENT_MISMATCH");
+							print_msg_unusable_reads(test_variant, rec, "LEFT", "EVENT_MISMATCH");
+						}
+						else
+						{
+							print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "LOWQUAL_EVENTS");
+							print_msg_unusable_reads(test_variant, rec, "LEFT", "LOWQUAL_EVENTS");
+						}
+						
+						continue;
+					}
+
+					int event_length =  event_sequence_scrappie.event_stop_idx - event_sequence_scrappie.event_start_idx + 1;
+					// get the base haplotype for left flank
+					int base_ref_beginPos, base_ref_endPos;
+					bool is_left_flanking;
+					Haplotype base_haplotype = base_haplotype_for_leftflank(alignments, rec, contig, contig_length, readpos_start_for_event, readpos_end_for_event, 
+						variant_start, variant_readPos, base_ref_beginPos, base_ref_endPos, is_left_flanking);
+
 					if (!is_left_flanking)
 					{
 						print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "POS_TOO_AWAY");
@@ -392,29 +386,51 @@ void left_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignmen
 						continue;
 					}
 
+
+					// get the ref likelihood.
+					int base_seqlen, base_hmm_input_len;
+					double base_score = score_haplotype_for_record(base_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, base_seqlen, base_hmm_input_len);
+					
+					//std::cout << "base_score: " << base_score << std::endl;
+					//std::cout << "base_seqlen: " << base_seqlen << std::endl;
+					
+
+					// get the alternative haplotype for left flank
+					Haplotype alt_haplotype;
+					if (test_variant.alt_seq == "<DEL>")
+					{
+						alt_haplotype = alt_haplotype_for_leftflank_DEL(alignments, contig, contig_length, test_variant, readpos_start_for_event, readpos_end_for_event, variant_start, variant_readPos, variant_len, base_ref_beginPos, is_left_flanking);
+						if (!is_left_flanking)
+						{
+							print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "LEFT", "POS_TOO_AWAY");
+							print_msg_unusable_reads(test_variant, rec, "LEFT", "POS_TOO_AWAY");
+							continue;
+						}
+
+					}
+					else if (test_variant.alt_seq == "<INS>")
+					{
+						alt_haplotype = alt_haplotype_for_leftflank_INS(alignments, contig, test_variant, base_ref_beginPos, base_ref_endPos);				
+					}
+					
+
+					// get the alt likelihood.
+					int alt_seqlen, alt_hmm_input_len;
+					double alt_score = score_haplotype_for_record(alt_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, alt_seqlen, alt_hmm_input_len);
+					//std::cout << "alt_score: " << alt_score << std::endl;
+					//std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
+
+					double likelihood_diff = alt_score - base_score;
+
+					print_result_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, event_length, flanking_sequence_amount, base_score, alt_score, likelihood_diff, "LEFT");
 				}
-				else if (test_variant.alt_seq == "<INS>")
+
+			
+				else
 				{
-					alt_haplotype = alt_haplotype_for_leftflank_INS(alignments, contig, test_variant, base_ref_beginPos, base_ref_endPos);				
+					//std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
+					print_msg_unusable_reads(test_variant, rec, "LEFT", "READ_NOSUPPORT");
 				}
-				
-
-				// get the alt likelihood.
-				int alt_seqlen, alt_hmm_input_len;
-				double alt_score = score_haplotype_for_record(alt_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, alt_seqlen, alt_hmm_input_len);
-				//std::cout << "alt_score: " << alt_score << std::endl;
-				//std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
-
-				double likelihood_diff = alt_score - base_score;
-
-				print_result_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, event_length, flanking_sequence_amount, base_score, alt_score, likelihood_diff, "LEFT");
-				
-
-			}
-			else
-			{
-				//std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
-				print_msg_unusable_reads(test_variant, rec, "LEFT", "READ_NOSUPPORT");
 			}
 
 		}
@@ -456,79 +472,94 @@ void right_flank_analysis(const AlignmentDB& alignments, const uint32_t& alignme
 			int variant_rightflank_inread = 0;
 			bool right_flank_is_valid = alignments._find_read_pos_from_ref_pos(rec.aligned_bases, (variant_start + test_variant.ref_length + flanking_sequence_amount), variant_rightflank_inread);
 
-			if (std::binary_search(test_variant.supporting_reads.begin(), test_variant.supporting_reads.end(), rec.read_name) && right_flank_is_valid)
+			if (std::binary_search(test_variant.supporting_reads.begin(), test_variant.supporting_reads.end(), rec.read_name))
 			{
-				//std::cout << rec.read_name << std::endl;
-				//std::cout << "Read supports the SV! right" << std::endl;
 
-				// get the event sequence.
-				int variant_readPos, readpos_start_for_event, readpos_end_for_event;
-				bool successful;
-				HMMInputData event_sequence_scrappie = get_events_and_read_coords_for_rightflank(alignments, rec, flanking_sequence_amount,
-																				variant_start, test_variant.ref_length, variant_readPos, 
-																				readpos_start_for_event, readpos_end_for_event, successful);
-
-				if (!successful)
+				if (right_flank_is_valid)
 				{
-					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "EVENT_MISMATCH");
-					print_msg_unusable_reads(test_variant, rec, "RIGHT", "EVENT_MISMATCH");
-					continue;
-				}
 
-				int event_length =  event_sequence_scrappie.event_stop_idx - event_sequence_scrappie.event_start_idx + 1;
-				// get the base haplotype for left flank
-				int base_ref_beginPos, base_ref_endPos;
-				bool is_right_flanking;
-				Haplotype base_haplotype = base_haplotype_for_rightflank(alignments, rec, contig, contig_length, readpos_start_for_event, readpos_end_for_event, 
-					variant_start, test_variant.ref_length, variant_readPos, base_ref_beginPos, base_ref_endPos, is_right_flanking);
 
-				if (!is_right_flanking)
-				{
-					print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "POS_TOO_AWAY");
-					print_msg_unusable_reads(test_variant, rec, "RIGHT", "POS_TOO_AWAY");
-					continue;
-				}
+					//std::cout << rec.read_name << std::endl;
+					//std::cout << "Read supports the SV! right" << std::endl;
 
-				// get the ref likelihood.
-				int base_seqlen, base_hmm_input_len;
-				double base_score = score_haplotype_for_record(base_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, base_seqlen, base_hmm_input_len);
-				//std::cout << "base_score: " << base_score << std::endl;
-				//std::cout << "base_seqlen: " << base_seqlen << std::endl;
-				
-				Haplotype alt_haplotype;
-				if (test_variant.alt_seq == "<DEL>")
-				{
-					alt_haplotype = alt_haplotype_for_rightflank_DEL(alignments, contig, contig_length, test_variant, readpos_start_for_event, 
-						readpos_end_for_event, variant_start, variant_readPos, base_ref_endPos, is_right_flanking);
+					// get the event sequence.
+					int variant_readPos, readpos_start_for_event, readpos_end_for_event;
+					bool successful;
+					bool event_mismatch;
+					HMMInputData event_sequence_scrappie = get_events_and_read_coords_for_rightflank(alignments, rec, flanking_sequence_amount,
+																					variant_start, test_variant.ref_length, variant_readPos, 
+																					readpos_start_for_event, readpos_end_for_event, successful, event_mismatch);
+
+					if (!successful)
+					{
+						if (event_mismatch)
+						{
+							print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "EVENT_MISMATCH");
+							print_msg_unusable_reads(test_variant, rec, "RIGHT", "EVENT_MISMATCH");
+						}
+						else
+						{
+							print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "LOWQUAL_EVENTS");
+							print_msg_unusable_reads(test_variant, rec, "RIGHT", "LOWQUAL_EVENTS");
+						}
+						
+						continue;
+					}
+
+					int event_length =  event_sequence_scrappie.event_stop_idx - event_sequence_scrappie.event_start_idx + 1;
+					// get the base haplotype for left flank
+					int base_ref_beginPos, base_ref_endPos;
+					bool is_right_flanking;
+					Haplotype base_haplotype = base_haplotype_for_rightflank(alignments, rec, contig, contig_length, readpos_start_for_event, readpos_end_for_event, 
+						variant_start, test_variant.ref_length, variant_readPos, base_ref_beginPos, base_ref_endPos, is_right_flanking);
+
 					if (!is_right_flanking)
 					{
 						print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "POS_TOO_AWAY");
 						print_msg_unusable_reads(test_variant, rec, "RIGHT", "POS_TOO_AWAY");
 						continue;
 					}
+
+					// get the ref likelihood.
+					int base_seqlen, base_hmm_input_len;
+					double base_score = score_haplotype_for_record(base_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, base_seqlen, base_hmm_input_len);
+					//std::cout << "base_score: " << base_score << std::endl;
+					//std::cout << "base_seqlen: " << base_seqlen << std::endl;
+					
+					Haplotype alt_haplotype;
+					if (test_variant.alt_seq == "<DEL>")
+					{
+						alt_haplotype = alt_haplotype_for_rightflank_DEL(alignments, contig, contig_length, test_variant, readpos_start_for_event, 
+							readpos_end_for_event, variant_start, variant_readPos, base_ref_endPos, is_right_flanking);
+						if (!is_right_flanking)
+						{
+							print_error_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, flanking_sequence_amount, "RIGHT", "POS_TOO_AWAY");
+							print_msg_unusable_reads(test_variant, rec, "RIGHT", "POS_TOO_AWAY");
+							continue;
+						}
+					}
+					else if (test_variant.alt_seq == "<INS>")
+					{
+						alt_haplotype = alt_haplotype_for_rightflank_INS(alignments, contig, test_variant, base_ref_beginPos, base_ref_endPos);		
+					}
+
+
+					// get the alt likelihood.
+					int alt_seqlen, alt_hmm_input_len;
+					double alt_score = score_haplotype_for_record(alt_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, alt_seqlen, alt_hmm_input_len);
+					//std::cout << "alt_score: " << alt_score << std::endl;
+					//std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
+
+					double likelihood_diff = alt_score - base_score;
+					
+					print_result_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, event_length, flanking_sequence_amount, base_score, alt_score, likelihood_diff, "RIGHT");
+				
 				}
-				else if (test_variant.alt_seq == "<INS>")
+				else
 				{
-					alt_haplotype = alt_haplotype_for_rightflank_INS(alignments, contig, test_variant, base_ref_beginPos, base_ref_endPos);		
+					//std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
+					print_msg_unusable_reads(test_variant, rec, "RIGHT", "READ_NOSUPPORT");
 				}
-
-
-				// get the alt likelihood.
-				int alt_seqlen, alt_hmm_input_len;
-				double alt_score = score_haplotype_for_record(alt_haplotype, event_sequence_scrappie, alignment_flags, methylation_types, alt_seqlen, alt_hmm_input_len);
-				//std::cout << "alt_score: " << alt_score << std::endl;
-				//std::cout << "alt_seqlen: " << alt_seqlen << std::endl;	
-
-				double likelihood_diff = alt_score - base_score;
-				
-				print_result_to_csv(out_fp, contig, rec, test_variant, variant_start, variant_len, event_length, flanking_sequence_amount, base_score, alt_score, likelihood_diff, "RIGHT");
-				
-
-			}
-			else
-			{
-				//std::cout << "Do not compute likelihood for now, because read does not support the SV or is softclipping on the left flank." << std::endl;
-				print_msg_unusable_reads(test_variant, rec, "RIGHT", "READ_NOSUPPORT");
 			}
 
 		}

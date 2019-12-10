@@ -33,10 +33,10 @@ std::vector<SequenceAlignmentRecordInfo> get_max_rightflankrefpos_and_seqrecords
 
 
 HMMInputData get_events_and_read_coords_for_leftflank(const AlignmentDB& alignments, const SequenceAlignmentRecordInfo& rec, int flanking_sequence_amount,
-									const int variant_start, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& successful);
+									const int variant_start, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& successful, bool& event_mismatch);
 
 HMMInputData get_events_and_read_coords_for_rightflank(const AlignmentDB& alignments, const SequenceAlignmentRecordInfo& rec, int flanking_sequence_amount,
-									const int variant_start, const int variant_ref_len, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& successful);
+									const int variant_start, const int variant_ref_len, int& variant_readPos, int& readpos_start_for_event, int& readpos_end_for_event, bool& successful, bool& event_mismatch);
 
 
 
